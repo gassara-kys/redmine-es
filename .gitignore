@@ -1,0 +1,8 @@
+# mysql
+mysql_conf.d/*
+mysql_data/*
+
+# splunk
+splunk_etc/*
+splunk_var/*
+

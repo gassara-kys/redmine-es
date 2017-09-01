@@ -1,0 +1,42 @@
+version: '2'
+
+services:
+  redmine:
+    image: redmine:3.4
+    ports:
+          - 3000:3000
+    environment:
+      REDMINE_DB_MYSQL: db
+      REDMINE_DB_PASSWORD: password
+    depends_on:
+      - db
+    restart: always
+
+  db:
+    image: mysql:8.0
+    user: "1000:50"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: redmine
+    restart: always
+    volumes:
+      - ./mysql_conf.d:/etc/mysql/conf.d/
+      - ./mysql_data:/var/lib/mysql
+
+  splunk:
+    image: splunk/splunk:6.6.3
+    environment:
+      SPLUNK_USER: root
+      SPLUNK_START_ARGS: --accept-license
+      SPLUNK_ENABLE_LISTEN: 9997
+      SPLUNK_ADD: tcp 1514
+    volumes:
+      - ./splunk_etc:/opt/splunk/etc
+      - ./splunk_var:/opt/splunk/var
+    links:
+      - redmine:redmine
+    ports:
+      - "8000:8000"
+      - "9997:9997"
+      - "8088:8088"
+      - "1514:1514"
