@@ -4,4 +4,4 @@ mysql/data/*
 
 # splunk
 splunk/etc/*
-splunk/data/*
+splunk/var/*
