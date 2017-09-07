@@ -1,5 +1,4 @@
 # mysql
-mysql/conf.d/*
 mysql/data/*
 
 # splunk

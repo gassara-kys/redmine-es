@@ -21,6 +21,7 @@ services:
     restart: always
     volumes:
       - ./mysql/conf.d:/etc/mysql/conf.d/
+      - ./mysql/scripts:/etc/mysql/scripts/
       - ./mysql/data:/var/lib/mysql
 
   splunk:
@@ -34,7 +35,7 @@ services:
       - ./splunk/etc:/opt/splunk/etc
       - ./splunk/var:/opt/splunk/var
     links:
-      - redmine:redmine
+      - db:mysql
     ports:
       - "8000:8000"
       - "9997:9997"
