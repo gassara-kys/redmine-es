@@ -1,6 +1,9 @@
 # mysql
 mysql/data/*
 
+# elasticsearch
+elasticsearch/data/*
+
 # splunk
 splunk/etc/*
 splunk/var/*
