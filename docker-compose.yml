@@ -1,4 +1,4 @@
-version: '3'
+version: '2'
 
 services:
 
@@ -32,20 +32,33 @@ services:
     container_name: mysql
 
   # == Elasticsearch ==========================
+  #  mod host vm.max_map_count. https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker
   elasticsearch:
     build: elasticsearch
-    volumes:
-      - ./elasticseatch/data:/usr/share/elasticsearch/data
-      - ./elasticseatch/config:/usr/share/elasticsearch/config
-      - ./elasticseatch/scripts:/usr/share/elasticsearch/scripts
     container_name: elasticsearch
     hostname: elasticsearch
-    ulimits:
-        nofile:
-            soft: 65536
-            hard: 65536
     environment:
-      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.monitoring.enabled=true
+      - xpack.watcher.enabled=false
+      - xpack.graph.enabled=false
+      - xpack.monitoring.history.duration=1d
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "http.host=0.0.0.0"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1.5g
+    volumes:
+      - ./elasticsearch/data:/usr/share/elasticsearch/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
     links:
       - mysql:mysql
     ports:
@@ -59,28 +72,19 @@ services:
     container_name: kibana
     hostname: kibana
     environment:
-        - ELASTICSEARCH_URL=http://elasticsearch:9200
+      ELASTICSEARCH_URL: "http://elasticsearch:9200"
+      XPACK_MONITORING_ELASTICSEARCH_URL: "http://elasticsearch:9200"
+      XPACK_SECURITY_ENABLED: "false"
     links:
         - elasticsearch:elasticsearch
     ports:
         - 80:5601
-
-  # splunk:
-  #   build: splunk
-  #   environment:
-  #     SPLUNK_USER: root
-  #     SPLUNK_START_ARGS: --accept-license --answer-yes
-  #     SPLUNK_ENABLE_LISTEN: 9997
-  #     SPLUNK_ADD: tcp 1514
-  #   volumes:
-  #     - ./splunk/etc:/opt/splunk/etc
-  #     - ./splunk/var:/opt/splunk/var
-  #     - ./splunk/scripts:/opt/splunk/bin/scripts
-  #   links:
-  #     - db:mysql
-  #   ports:
-  #     - "8000:8000"
-  #     - "9997:9997"
-  #     - "8088:8088"
-  #     - "1514:1514"
-  #   restart: always
+    mem_limit: 2g
+    memswap_limit: 2g
+    depends_on:
+      - elasticsearch
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
