@@ -13,6 +13,8 @@ services:
     depends_on:
       - mysql
     restart: always
+    volumes:
+      - ./redmine/script/elasticsearch:/usr/src/redmine/script/elasticsearch/
     hostname: redmine
     container_name: redmine
 
@@ -32,7 +34,7 @@ services:
     container_name: mysql
 
   # == Elasticsearch ==========================
-  #  mod host vm.max_map_count. https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker
+  # mod host vm.max_map_count. https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker
   elasticsearch:
     build: elasticsearch
     container_name: elasticsearch

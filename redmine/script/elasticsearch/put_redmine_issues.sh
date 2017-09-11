@@ -4,18 +4,17 @@
 # ################################################################################
 
 # 接続情報
-MYSQL_CLIENT_CONF=/opt/splunk/bin/scripts/client.conf
+MYSQL_CLIENT_CONF=/usr/src/redmine/script/elasticsearch/client.conf
 MYSQL_SCHEMA='redmine'
 
 # ベースSQL
 SQL_BASE_ISSUES="select id, project_id, tracker_id, subject, category_id, status_id, date_format(created_on, '%Y/%m/%dT%H:%i:%s') as created_on, date_format(updated_on, '%Y/%m/%dT%H:%i:%s') as updated_on from issues"
-# mysql --defaults-extra-file=/etc/mysql/conf.d/client.conf --database=redmine -B -e "select id, project_id, tracker_id, subject, category_id, status_id, created_on, updated_on from issues" | sed -e 's/\t/,/g'
 
 # 出力ファイル
-POS_FILE=/opt/splunk/bin/scripts/issues.pos
-OUT_FILE=/opt/splunk/bin/scripts/issues.json
+POS_FILE=/usr/src/redmine/script/elasticsearch/issues.pos
+OUT_FILE=/usr/src/redmine/script/elasticsearch/issues.json
 
-function echoLog()
+function errorEcho()
 {
     echo "[`date '+%Y/%m/%d %T'`] $1"
 }
@@ -29,14 +28,15 @@ function updatePosFile() {
 function outputSQLResult() {
 
   QUERY="$SQL_BASE_ISSUES $@"
-  echoLog "mysql --defaults-extra-file=$MYSQL_CLIENT_CONF -h mysql --database=$MYSQL_SCHEMA -B -e \"$QUERY\""
+  echo "mysql --defaults-extra-file=$MYSQL_CLIENT_CONF -h mysql --database=$MYSQL_SCHEMA -B -e \"$QUERY\""
   ResultCsv=$(mysql --defaults-extra-file=$MYSQL_CLIENT_CONF -h mysql --database=$MYSQL_SCHEMA -B -e "$QUERY" | sed -e 's/\t/,/g'| sed -e 's/\r/\n/g')
   ret=$?
   if [ $ret -gt 0 ];then
-      echoLog "SQL error($ret) : $Result"
+      errorEcho "SQL error($ret) : $Result"
       exit 1
   fi
 
+  echo $ResultCsv
   cnt=0
   KEYS=()
   for record in ${ResultCsv[@]}; do
@@ -73,7 +73,6 @@ function outputSQLResult() {
     }
     json_record=$json_record"}"
 
-    echoLog $json_record
     echo $json_record >> $OUT_FILE
   done
 }
