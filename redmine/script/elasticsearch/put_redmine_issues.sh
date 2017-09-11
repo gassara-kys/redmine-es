@@ -28,8 +28,8 @@ function updatePosFile() {
 function outputSQLResult() {
 
   QUERY="$SQL_BASE_ISSUES $@"
-  echo "mysql --defaults-extra-file=$MYSQL_CLIENT_CONF -h mysql --database=$MYSQL_SCHEMA -B -e \"$QUERY\""
-  ResultCsv=$(mysql --defaults-extra-file=$MYSQL_CLIENT_CONF -h mysql --database=$MYSQL_SCHEMA -B -e "$QUERY" | sed -e 's/\t/,/g'| sed -e 's/\r/\n/g')
+  echo "mysql --defaults-extra-file=$MYSQL_CLIENT_CONF -h mysql --default-character-set=utf8 --database=$MYSQL_SCHEMA -B -e \"$QUERY\""
+  ResultCsv=$(mysql --defaults-extra-file=$MYSQL_CLIENT_CONF -h mysql --default-character-set=utf8 --database=$MYSQL_SCHEMA -B -e "$QUERY" | sed -e 's/\t/,/g'| sed -e 's/\r/\n/g')
   ret=$?
   if [ $ret -gt 0 ];then
       errorEcho "SQL error($ret) : $Result"
