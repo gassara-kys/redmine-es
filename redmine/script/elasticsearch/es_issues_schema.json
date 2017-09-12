@@ -1,0 +1,28 @@
+{
+  "properties" : {
+    "id" : {
+      "type": "text",
+      "index" : "not_analyzed"
+    },
+    "project_id" : {
+      "type" : "text",
+      "index" : "not_analyzed"
+    },
+    "tracker_id" : {
+      "type" : "text",
+      "index" : "not_analyzed"
+    },
+    "status_id" : {
+      "type" : "text",
+      "index" : "not_analyzed"
+    },
+    "created_on" : {
+      "type" : "date",
+      "format" : "YYYY/MM/dd'T'HH:mm:ss"
+    },
+    "updated_on" : {
+      "type" : "date",
+      "format" : "YYYY/MM/dd'T'HH:mm:ss"
+    }
+  }
+}

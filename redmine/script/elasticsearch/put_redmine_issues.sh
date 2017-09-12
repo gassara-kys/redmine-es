@@ -1,41 +1,62 @@
 #/bin/bash
 # ################################################################################
-#   MySQL
+#  Const
 # ################################################################################
-
 # 接続情報
 MYSQL_CLIENT_CONF=/usr/src/redmine/script/elasticsearch/client.conf
 MYSQL_SCHEMA='redmine'
+ES_HOST='elasticsearch'
+ES_PORT='9200'
 
 # ベースSQL
 SQL_BASE_ISSUES="select id, project_id, tracker_id, subject, category_id, status_id, date_format(created_on, '%Y/%m/%dT%H:%i:%s') as created_on, date_format(updated_on, '%Y/%m/%dT%H:%i:%s') as updated_on from issues"
 
-# 出力ファイル
+# ファイル
+SCHEMA_FILE=/usr/src/redmine/script/elasticsearch/es_issues_schema.json
 POS_FILE=/usr/src/redmine/script/elasticsearch/issues.pos
 OUT_FILE=/usr/src/redmine/script/elasticsearch/issues.json
 
-function errorEcho()
-{
-    echo "[`date '+%Y/%m/%d %T'`] $1"
+
+# ################################################################################
+#  function
+# ################################################################################
+function echoLog() {
+  echo -e "[`date '+%Y/%m/%d %T'`] $1"
 }
 
 function updatePosFile() {
   echo $1 > $POS_FILE
 }
 
-# MySQL コマンドでSQL実行 -値を1つだけ取得
-# argv : where区など
+# create elasticsearch index when not created yet.
+function createIndex() {
+
+  STATUS_CODE=`curl -LI -o /dev/null -w '%{http_code}' -s http://$ES_HOST:$ES_PORT/$1`
+  if [ ${STATUS_CODE} != "200" ]; then
+    echoLog "create index http://$ES_HOST:$ES_PORT/$1"
+    curl -XPUT http://$ES_HOST:$ES_PORT/$1/
+    curl -XPUT http://$ES_HOST:$ES_PORT/$1/_mapping/issues -d @$SCHEMA_FILE
+  fi
+}
+
+# MySQL select
+# argv : where
 function outputSQLResult() {
 
+  # clear file
+  echo "" > $OUT_FILE
+
+  # mysql select
   QUERY="$SQL_BASE_ISSUES $@"
-  echo "mysql --defaults-extra-file=$MYSQL_CLIENT_CONF -h mysql --default-character-set=utf8 --database=$MYSQL_SCHEMA -B -e \"$QUERY\""
   ResultCsv=$(mysql --defaults-extra-file=$MYSQL_CLIENT_CONF -h mysql --default-character-set=utf8 --database=$MYSQL_SCHEMA -B -e "$QUERY" | sed -e 's/\t/,/g'| sed -e 's/\r/\n/g')
+
   ret=$?
   if [ $ret -gt 0 ];then
-      errorEcho "SQL error($ret) : $Result"
+      echoLog "SQL error($ret) : $Result"
       exit 1
   fi
 
+  # output file
   echo $ResultCsv
   cnt=0
   KEYS=()
@@ -49,7 +70,7 @@ function outputSQLResult() {
     VALUES=($record)
     IFS="$IFS_ORIGINAL"
 
-    # カラム取得
+    # get columns
     if [ $cnt -eq 1 ];then
       for col in ${VALUES[@]}; do
         KEYS=("${KEYS[@]}" $col)
@@ -57,7 +78,7 @@ function outputSQLResult() {
       continue
     fi
 
-    # JSONコンバート
+    # JSON format convert
     json_record="{"
     for ((i = 0; i < ${#VALUES[@]}; i++)) {
       if [ $i -gt 0 ];then
@@ -78,10 +99,25 @@ function outputSQLResult() {
 }
 
 
+function putElasticsearch() {
+  ID_PRE=`date "+%Y%m%d%H%M%S"`
+  idx=0
+  for line in `cat $OUT_FILE`; do
+    let idx++
+    EVENT_ID=$ID_PRE$idx
+    curl -s -XPOST http://$ES_HOST:$ES_PORT/$1/issues/$EVENT_ID -d $line > /dev/null 2>&1
+  done
+}
+
+# ################################################################################
+#   main
+# ################################################################################
+# set values
+YYYYMM=`date  "+%Y%m"`
+ES_INDEX="redmine-$YYYYMM"
 NOW=`date "+%Y/%m/%dT%H:%M:%S"`
 POS_DATETIME=`cat $POS_FILE`
 FILTER=" where "
-
 if [ -z "$POS_DATETIME" ]; then
   FILTER=$FILTER" updated_on <= str_to_date('$NOW' ,'%Y/%m/%dT%H:%i:%s')"
 else
@@ -89,5 +125,10 @@ else
   FILTER=$FILTER" AND updated_on > str_to_date('$POS_DATETIME' ,'%Y/%m/%dT%H:%i:%s')"
 fi
 
+# exec functions
+createIndex $ES_INDEX
 outputSQLResult $FILTER
+if [ $? -ne 0 ]; then echo "DB select Error";exit 1; fi
+
+putElasticsearch $ES_INDEX
 updatePosFile $NOW
