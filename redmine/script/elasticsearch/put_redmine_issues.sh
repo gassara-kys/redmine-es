@@ -123,6 +123,7 @@ function putElasticsearch() {
 YYYYMM=`date  "+%Y%m"`
 ES_INDEX="redmine-$YYYYMM"
 NOW=`date "+%Y/%m/%dT%H:%M:%S"`
+touch $POS_FILE
 POS_DATETIME=`cat $POS_FILE`
 FILTER=" where "
 if [ -z "$POS_DATETIME" ]; then
