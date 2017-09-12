@@ -1,3 +1,6 @@
+# redmine
+redmine/script/elasticsearch/issues.*
+
 # mysql
 mysql/data/*
 
