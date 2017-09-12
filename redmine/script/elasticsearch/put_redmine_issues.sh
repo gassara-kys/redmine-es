@@ -44,7 +44,7 @@ function createIndex() {
 function outputSQLResult() {
 
   # clear file
-  echo "" > $OUT_FILE
+  rm $OUT_FILE; touch $OUT_FILE
 
   # mysql select
   QUERY="$SQL_BASE_ISSUES $@"
@@ -102,11 +102,18 @@ function outputSQLResult() {
 function putElasticsearch() {
   ID_PRE=`date "+%Y%m%d%H%M%S"`
   idx=0
-  for line in `cat $OUT_FILE`; do
+
+  TEMP_FILE=`dirname $0`/tmp.json
+  cat $OUT_FILE | while read line
+  do
     let idx++
     EVENT_ID=$ID_PRE$idx
-    curl -s -XPOST http://$ES_HOST:$ES_PORT/$1/issues/$EVENT_ID -d $line > /dev/null 2>&1
+    echo $line > $TEMP_FILE
+    echoLog "target:$ES_HOST:$ES_PORT/$1/issues/ ,_id : $EVENT_ID, _source : `cat $TEMP_FILE`"
+    curl -s -XPUT http://$ES_HOST:$ES_PORT/$1/issues/$EVENT_ID --data @$TEMP_FILE
   done
+
+  rm $TEMP_FILE
 }
 
 # ################################################################################
