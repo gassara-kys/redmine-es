@@ -29,7 +29,7 @@ services:
     volumes:
       - ./mysql/conf.d:/etc/mysql/conf.d/
       - ./mysql/scripts:/etc/mysql/scripts/
-      - ./mysql/data:/var/lib/mysql
+      - dbdata1:/var/lib/mysql
     hostname: mysql
     container_name: mysql
 
@@ -55,7 +55,7 @@ services:
         hard: -1
     mem_limit: 2g
     volumes:
-      - ./elasticsearch/data:/usr/share/elasticsearch/data
+      - esdata1:/usr/share/elasticsearch/data
     logging:
       driver: "json-file"
       options:
@@ -90,3 +90,10 @@ services:
       options:
         max-size: "10m"
         max-file: "10"
+
+volumes:
+  dbdata1:
+    driver: local
+  esdata1:
+    driver: local
+
