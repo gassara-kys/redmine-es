@@ -12,7 +12,7 @@ splunk/etc/*
 splunk/var/*
 
 # redmine sync
-sync/bin/*
+sync/bin
 
 # memo
 util/my_memo.md
