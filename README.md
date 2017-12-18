@@ -97,9 +97,16 @@ DB_USER=redmine
 DB_PASS=password
 ES_URL="http://localhost:9200"
 
-*/1 * * * * /usr/local/bin/docker run --rm --name redmine-sync -e DB_HOST=${DB_HOST} -e DB_PORT=${DB_PORT} -e DB_NAME=${DB_NAME} -e DB_USER=${DB_USER} -e DB_PASS=${DB_PASS} -e ES_URL=${ES_URL} redmine-sync:latest 2>&1 | logger -t redmine-sync
+*/1 * * * * /usr/bin/docker run --rm --name redmine-sync -e DB_HOST=${DB_HOST} -e DB_PORT=${DB_PORT} -e DB_NAME=${DB_NAME} -e DB_USER=${DB_USER} -e DB_PASS=${DB_PASS} -e ES_URL=${ES_URL} redmine-sync:latest 2>&1 | logger -t redmine-sync
 
 $ crontab < ~/crontab   # 戻し
+```
+
+- cron log
+
+```bash
+# logger の出力先にログが出る
+$ tail -f /var/log/syslog
 ```
 
 ### その他
