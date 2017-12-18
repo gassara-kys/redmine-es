@@ -6,7 +6,7 @@ services:
   redmine:
     build: redmine
     environment:
-      REDMINE_DB_MYSQL: ${DB_NAME}
+      REDMINE_DB_MYSQL: mysql
       REDMINE_DB_PASSWORD: ${DB_ROOT_PASS}
     depends_on:
       - mysql

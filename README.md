@@ -43,6 +43,7 @@ $ apt-get -y install docker-ce
 $ git clone https://github.com/gassara-kys/redmine-es.git
 $ cd redmine-es
 $ docker-compose build --no-cache
+$ source util/env.sample.sh
 $ docker-compose up -d
 ```
 
@@ -71,7 +72,8 @@ localhostの部分はdockerホストのIPに読み替え
 - Docker run
 
 ```bash
-$ docker build -t redmine-sync:latest sync
+$ cd sync/
+$ docker build -t redmine-sync:latest .
 $ docker run --rm --name redmine-sync \
     -e DB_HOST=localhost \
     -e DB_PORT=3306 \
