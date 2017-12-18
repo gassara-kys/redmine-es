@@ -1,4 +1,4 @@
-FROM golang:1.9.1 as builder
+FROM golang:1.9.1 AS builder
 
 RUN go get -v github.com/go-sql-driver/mysql && \
     go get -v github.com/jinzhu/gorm && \

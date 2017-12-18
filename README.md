@@ -22,12 +22,15 @@ User（チケット更新）
 - docker
 - docker-compose
 
-### Ubuntuの例
+### Ubuntuにdocker-ceインストールの例 ※詳細は公式を
 
 ```bash
+$ sudo -s
+$ apt-get -y install apt-transport-https ca-certificates curl software-properties-common
+$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+$ add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 $ apt-get update
-$ apt-get install docker.io
-$ apt install docker-compose
+$ apt-get -y install docker-ce
 ```
 
 ## 起動
@@ -68,7 +71,7 @@ localhostの部分はdockerホストのIPに読み替え
 - Docker run
 
 ```bash
-$ docker build -t redmine-sync:latest .
+$ docker build -t redmine-sync:latest sync
 $ docker run --rm --name redmine-sync \
     -e DB_HOST=localhost \
     -e DB_PORT=3306 \

@@ -95,25 +95,6 @@ services:
     container_name: kibana
     hostname: kibana
 
-  # == SyncRedmine ==========================
-  sync:
-    build: sync
-    environment:
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASS: ${DB_PASS}
-      ES_URL: 
-    links:
-        - elasticsearch:elasticsearch
-        - mysql:mysql
-    depends_on:
-      - elasticsearch
-      - mysql
-    container_name: sync
-    hostname: sync
-
 volumes:
   dbdata1:
     driver: local
