@@ -19,10 +19,6 @@ $ docker-machine ssh
 $ sudo -s
 $ sysctl -w vm.max_map_count=262144
 ```
-  - mysqlのマウント先のパーミッションエラーが発生した場合
-    - docker volume ls でDBにマウントされているディスクを確認 
-    - docker volume inspect {dbvolume}でマウント先のパスを確認
-    - chmod 777 {マウント先}
 
 ### 動作確認
 
@@ -33,9 +29,6 @@ localhostの部分はdockerホストのIPに読替え
 - Kibana
   - http://localhost:5601/
 
-### サンプルデータをREDMINEに流す
-
-あとで
 
 
 ### Redmineチケットの更新をElasticsearchに流す
@@ -59,5 +52,7 @@ $ crontab -e
 ### sync
 
 ```bash
+$ go get -u github.com/jinzhu/gorm
+$ go get -u github.com/go-sql-driver/mysql
 $ go get -d github.com/olivere/elastic
 ```

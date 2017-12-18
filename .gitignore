@@ -10,3 +10,12 @@ elasticsearch/data/*
 # splunk
 splunk/etc/*
 splunk/var/*
+
+# redmine sync
+sync/bin/*
+
+# memo
+util/my_memo.md
+
+
+
