@@ -1,29 +1,37 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/olivere/elastic"
 )
 
 const (
-	dbName     = "garigari"
-	dbUser     = "garigari"
-	dbPass     = "garigari"
+	dbName     = "redmine"
+	dbUser     = "root"
+	dbPass     = "password"
 	dbProtocol = "tcp"
-	dbHost     = "127.0.0.1"
+	dbHost     = "dev-redmine-es01.in.ssg.isca.jp"
 	dbPort     = "3306"
 
-	url = "http://elasticsearch:9200/"
+	url = "http://dev-redmine-es01.in.ssg.isca.jp:9200"
 )
 
 func main() {
 	// DB fetch
+	db := getDB()
+	defer db.Close()
+	issues := getIssues(db)
+	for idx, data := range *issues {
+		log.Printf("issus[%d]: %v", idx, data)
+	}
 
 	// Elasticsearch put
+	putEsData(issues)
 }
 
 func getDB() *gorm.DB {
@@ -43,36 +51,63 @@ func getDB() *gorm.DB {
 	return db
 }
 
-func putEsData() {
-	client, err := elastic.NewClient()
+func getIssues(db *gorm.DB) *[]Issue {
+
+	query := `
+select 
+	i.id          as issue_id,
+	i.project_id  as project_id,
+	p.name        as project_nm, 
+	i.tracker_id  as tracker_id,
+	t.name        as tracker_nm, 
+	i.subject     as subject,
+	i.category_id as category_id,
+	ic.name       as category_nm,
+	i.status_id   as status_id,
+	ists.name     as status_nm,
+	i.priority_id as priority_id,
+	i.author_id   as author_id,
+	u.login       as author_nm,
+	i.created_on  as created_on,
+	i.updated_on  as updated_on,
+	i.closed_on   as closed_on 
+from
+	issues i
+	left outer join trackers t on t.id=i.tracker_id
+	left outer join projects p on p.id=i.project_id
+	left outer join issue_categories ic on ic.project_id=i.project_id and ic.id=i.category_id
+	left outer join issue_statuses ists on ists.id=i.status_id
+	left outer join users u on u.id=i.author_id 
+order by 
+	i.id
+`
+	var issues []Issue
+	db.Raw(query).Scan(&issues)
+	return &issues
+}
+
+func putEsData(issues *[]Issue) {
+	client, err := elastic.NewClient(
+		elastic.SetSniff(false),
+		elastic.SetURL(url),
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer client.Stop()
 
 	bulkRequest := client.Bulk()
 
-	// for loop start
-	issue1 := Issue{
-		ID:        "1",
-		ProjectID: "1",
-		ProjectNm: "Security_Event",
-		TrackerID: "1",
-		TrackerNm: "TEAM1",
-		StatusID:  "1",
-		StatusNm:  "STATUS1",
-		CreatedOn: time.Now(),
-		UpdatedOn: time.Now(),
+	for _, issue := range *issues {
+		index1Req := elastic.NewBulkIndexRequest().
+			Index("201801").
+			Type("issues").
+			Id(issue.IssueID).
+			Doc(issue)
+		bulkRequest = bulkRequest.Add(index1Req)
 	}
-	index1Req := elastic.NewBulkIndexRequest().
-		Index("201801").
-		Type("issue").
-		Id("1").
-		Doc(issue1)
 
-	bulkRequest = bulkRequest.Add(index1Req)
-	// for loop end
-
-	bulkResponse, err := bulkRequest.Do()
+	bulkResponse, err := bulkRequest.Do(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
