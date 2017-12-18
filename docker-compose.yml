@@ -6,7 +6,7 @@ services:
   redmine:
     build: redmine
     ports:
-          - 3000:3000
+          - 80:3000
     environment:
       REDMINE_DB_MYSQL: mysql
       REDMINE_DB_PASSWORD: password
@@ -20,15 +20,19 @@ services:
 
   # == Mysql ==========================
   mysql:
-    build: mysql
-    user: "1000:50"
+    image: mysql:5.7
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
     environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: redmine
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=redmine
+      - MYSQL_USER=redmine
+      - MYSQL_PASSWORD=password
     restart: always
+    ports:
+      - 3306:3306
     volumes:
       - ./mysql/conf.d:/etc/mysql/conf.d/
-      - ./mysql/scripts:/etc/mysql/scripts/
+      - ./mysql/mysqldump:/docker-entrypoint-initdb.d
       - dbdata1:/var/lib/mysql
     hostname: mysql
     container_name: mysql
@@ -64,9 +68,9 @@ services:
     links:
       - mysql:mysql
     ports:
-      - "9200:9200"
+      - 9200:9200
     expose:
-      - "9300"
+      - 9300
 
   # == Kibana ==========================
   kibana:
@@ -80,7 +84,7 @@ services:
     links:
         - elasticsearch:elasticsearch
     ports:
-        - 80:5601
+        - 5601:5601
     mem_limit: 2g
     memswap_limit: 2g
     depends_on:

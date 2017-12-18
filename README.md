@@ -14,6 +14,11 @@ $ docker-compose up -d
   - Elasticsearch起動時のメモリ消費調整
     - vm.max_map_countの値を調整
     - 詳細は https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker
+```bash
+$ docker-machine ssh
+$ sudo -s
+$ sysctl -w vm.max_map_count=262144
+```
   - mysqlのマウント先のパーミッションエラーが発生した場合
     - docker volume ls でDBにマウントされているディスクを確認 
     - docker volume inspect {dbvolume}でマウント先のパスを確認
@@ -24,9 +29,9 @@ $ docker-compose up -d
 localhostの部分はdockerホストのIPに読替え
 
 - Redmine
-  - http://localhost:3000/
-- Kibana
   - http://localhost/
+- Kibana
+  - http://localhost:5601/
 
 ### サンプルデータをREDMINEに流す
 
@@ -51,4 +56,8 @@ $ crontab -e
 */1 * * * * /path/to/dir/redmine-test/util/exec_redmine_es_script.sh
 ```
 
+### sync
 
+```bash
+$ go get -d github.com/olivere/elastic
+```
