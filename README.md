@@ -1,28 +1,60 @@
-# redmine-test
+# redmine-es
 
-### 起動
+## 目的
+
+ここでは以下のようなことを実現しようとしています。
+- チケット管理システムRedmine構築
+- チケット更新情報をElasticserchに流す
+- それをKibanaで見る
+- という仕組みをDockerでやる
+- ユースケースイメージ
+```
+User（チケット更新）
+    ===> REDMINE 
+    ===> (redmine-sync) ※go app
+    ===> Elasticsearch
+    ===> Kibana
+    ===> User（集計／モニタリング）
+```
+
+## 準備
+
+- docker
+- docker-compose
+
+### Ubuntuの例
+
+```bash
+$ apt-get update
+$ apt-get install docker.io
+$ apt install docker-compose
+```
+
+## 起動
+
+### RedmineとElasticsearch
 
 - docker-composeコマンド
 
 ```bash
-$ cd /path/to/dir/
-$ git clone https://github.com/gassara-kys/redmine-test.git
+$ git clone https://github.com/gassara-kys/redmine-es.git
+$ cd redmine-es
+$ docker-compose build --no-cache
 $ docker-compose up -d
 ```
 
 - 起動時にエラーが発生した場合
   - Elasticsearch起動時のメモリ消費調整
-    - vm.max_map_countの値を調整
-    - 詳細は https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker
+  - vm.max_map_count
 ```bash
-$ docker-machine ssh
+# docker hostにsshして...
 $ sudo -s
 $ sysctl -w vm.max_map_count=262144
 ```
 
 ### 動作確認
 
-localhostの部分はdockerホストのIPに読替え
+localhostの部分はdockerホストのIPに読み替え
 
 - Redmine
   - http://localhost/
@@ -33,26 +65,44 @@ localhostの部分はdockerホストのIPに読替え
 
 ### Redmineチケットの更新をElasticsearchに流す
 
-- dockerが起動している状態で下記のスクリプトを実行
+- Docker run
 
 ```bash
-$ cd redmine-test/util
-$ ./exec_redmine_es_script.sh
+$ docker build -t redmine-sync:latest .
+$ docker run --rm --name redmine-sync \
+    -e DB_HOST=localhost \
+    -e DB_PORT=3306 \
+    -e DB_NAME=redmine \
+    -e DB_USER=redmine \
+    -e DB_PASS=password \
+    -e ES_URL="http://localhost:9200" \
+    redmine-sync:latest
 ```
 
-- cron登録する例
+- Set Cron
 
 ```bash
-$ crontab -e
+$ crontab -l > ~/crontab  #別ファイル編集
+$ vi ~/crontab
+# 以下を追加
+DB_HOST=localhost
+DB_PORT=3306 
+DB_NAME=redmine
+DB_USER=redmine
+DB_PASS=password
+ES_URL="http://localhost:9200"
 
-# 毎分起動
-*/1 * * * * /path/to/dir/redmine-test/util/exec_redmine_es_script.sh
+*/1 * * * * /usr/local/bin/docker run --rm --name redmine-sync -e DB_HOST=${DB_HOST} -e DB_PORT=${DB_PORT} -e DB_NAME=${DB_NAME} -e DB_USER=${DB_USER} -e DB_PASS=${DB_PASS} -e ES_URL=${ES_URL} redmine-sync:latest 2>&1 | logger -t redmine-sync
+
+$ crontab < ~/crontab   # 戻し
 ```
 
-### sync
+### その他
+
+- redmine syncの依存関係
 
 ```bash
-$ go get -u github.com/jinzhu/gorm
-$ go get -u github.com/go-sql-driver/mysql
-$ go get -d github.com/olivere/elastic
+$ go get -v github.com/jinzhu/gorm
+$ go get -v github.com/go-sql-driver/mysql
+$ go get -v github.com/olivere/elastic
 ```

@@ -5,14 +5,14 @@ services:
   # == REDMINE ==========================
   redmine:
     build: redmine
-    ports:
-          - 80:3000
     environment:
-      REDMINE_DB_MYSQL: mysql
-      REDMINE_DB_PASSWORD: password
+      REDMINE_DB_MYSQL: ${DB_NAME}
+      REDMINE_DB_PASSWORD: ${DB_ROOT_PASS}
     depends_on:
       - mysql
     restart: always
+    ports:
+          - 80:3000
     volumes:
       - ./redmine/script/elasticsearch:/usr/src/redmine/script/elasticsearch/
     hostname: redmine
@@ -23,13 +23,13 @@ services:
     image: mysql:5.7
     command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
     environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=redmine
-      - MYSQL_USER=redmine
-      - MYSQL_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASS}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASS}
     restart: always
     ports:
-      - 3306:3306
+      - ${DB_PORT}:3306
     volumes:
       - ./mysql/conf.d:/etc/mysql/conf.d/
       - ./mysql/mysqldump:/docker-entrypoint-initdb.d
@@ -41,8 +41,6 @@ services:
   # mod host vm.max_map_count. https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker
   elasticsearch:
     build: elasticsearch
-    container_name: elasticsearch
-    hostname: elasticsearch
     environment:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
@@ -58,6 +56,12 @@ services:
         soft: -1
         hard: -1
     mem_limit: 2g
+    links:
+      - mysql:mysql
+    ports:
+      - 9200:9200
+    expose:
+      - 9300
     volumes:
       - esdata1:/usr/share/elasticsearch/data
     logging:
@@ -65,28 +69,22 @@ services:
       options:
         max-size: "10m"
         max-file: "10"
-    links:
-      - mysql:mysql
-    ports:
-      - 9200:9200
-    expose:
-      - 9300
+    container_name: elasticsearch
+    hostname: elasticsearch
 
   # == Kibana ==========================
   kibana:
     build: kibana
-    container_name: kibana
-    hostname: kibana
     environment:
       ELASTICSEARCH_URL: "http://elasticsearch:9200"
       XPACK_MONITORING_ELASTICSEARCH_URL: "http://elasticsearch:9200"
       XPACK_SECURITY_ENABLED: "false"
+    mem_limit: 2g
+    memswap_limit: 2g
     links:
         - elasticsearch:elasticsearch
     ports:
         - 5601:5601
-    mem_limit: 2g
-    memswap_limit: 2g
     depends_on:
       - elasticsearch
     logging:
@@ -94,6 +92,27 @@ services:
       options:
         max-size: "10m"
         max-file: "10"
+    container_name: kibana
+    hostname: kibana
+
+  # == SyncRedmine ==========================
+  sync:
+    build: sync
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      ES_URL: 
+    links:
+        - elasticsearch:elasticsearch
+        - mysql:mysql
+    depends_on:
+      - elasticsearch
+      - mysql
+    container_name: sync
+    hostname: sync
 
 volumes:
   dbdata1:

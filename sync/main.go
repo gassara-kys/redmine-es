@@ -11,12 +11,12 @@ import (
 )
 
 const (
+	dbHost     = "dev-redmine-es01.in.ssg.isca.jp"
+	dbPort     = "3306"
 	dbName     = "redmine"
 	dbUser     = "root"
 	dbPass     = "password"
 	dbProtocol = "tcp"
-	dbHost     = "dev-redmine-es01.in.ssg.isca.jp"
-	dbPort     = "3306"
 
 	url = "http://dev-redmine-es01.in.ssg.isca.jp:9200"
 )
