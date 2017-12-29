@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -11,14 +12,14 @@ import (
 )
 
 const (
-	dbHost     = os.GetENV("DB_HOST") // dev-redmine-es01.in.ssg.isca.jp
-	dbPort     = os.GetENV("DB_PORT") // "3306"
-	dbName     = os.GetENV("DB_NAME") // "redmine"
-	dbUser     = os.GetENV("DB_USER") // "root"
-	dbPass     = os.GetENV("DB_PASS") // "password"
+	// dbHost     = os.Getenv("DB_HOST") // dev-redmine-es01.in.ssg.isca.jp
+	// dbPort     = os.Getenv("DB_PORT") // "3306"
+	// dbName     = os.Getenv("DB_NAME") // "redmine"
+	// dbUser     = os.Getenv("DB_USER") // "root"
+	// dbPass     = os.Getenv("DB_PASS") // "password"
 	dbProtocol = "tcp"
 
-	url = os.GetENV("ES_URL") // "http://dev-redmine-es01.in.ssg.isca.jp:9200"
+	// url = os.Getenv("ES_URL") // "http://dev-redmine-es01.in.ssg.isca.jp:9200" 
 )
 
 func main() {
@@ -39,8 +40,8 @@ func getDB() *gorm.DB {
 		"mysql",
 		fmt.Sprintf(
 			"%s:%s@%s([%s]:%s)/%s?parseTime=true",
-			dbUser, dbPass, dbProtocol,
-			dbHost, dbPort, dbName,
+			os.Getenv("DB_USER"), os.Getenv("DB_PASS"), dbProtocol,
+			os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"),
 		),
 	)
 	if err != nil {
@@ -91,7 +92,7 @@ order by
 func putEsData(issues *[]Issue) {
 	client, err := elastic.NewClient(
 		elastic.SetSniff(false),
-		elastic.SetURL(url),
+		elastic.SetURL(os.Getenv("ES_URL")),
 	)
 	if err != nil {
 		log.Fatal(err)
