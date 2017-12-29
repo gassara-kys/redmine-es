@@ -18,7 +18,7 @@ const (
 	dbPass     = "password"
 	dbProtocol = "tcp"
 
-	url = "http://localhost:9200"
+	url = "http://dev-redmine-es01.in.ssg.isca.jp:9200"
 )
 
 func main() {
@@ -26,6 +26,9 @@ func main() {
 	db := getDB()
 	defer db.Close()
 	issues := getIssues(db)
+	for idx, data := range *issues {
+		log.Printf("issus[%d]: %v", idx, data)
+	}
 
 	// Elasticsearch put
 	putEsData(issues)
