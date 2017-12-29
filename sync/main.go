@@ -11,14 +11,14 @@ import (
 )
 
 const (
-	dbHost     = "dev-redmine-es01.in.ssg.isca.jp"
+	dbHost     = "localhost"
 	dbPort     = "3306"
 	dbName     = "redmine"
 	dbUser     = "root"
 	dbPass     = "password"
 	dbProtocol = "tcp"
 
-	url = "http://dev-redmine-es01.in.ssg.isca.jp:9200"
+	url = "http://localhost:9200"
 )
 
 func main() {
