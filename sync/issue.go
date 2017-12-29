@@ -22,4 +22,5 @@ type Issue struct {
 	CreatedOn  time.Time `json:"created_on"`
 	UpdatedOn  time.Time `json:"updated_on"`
 	ClosedOn   time.Time `json:"closed_on"`
+	Score      int `json:"score"`
 }

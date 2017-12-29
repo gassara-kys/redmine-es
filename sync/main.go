@@ -18,7 +18,7 @@ const (
 	dbPass     = "password"
 	dbProtocol = "tcp"
 
-	url = "http://dev-redmine-es01.in.ssg.isca.jp:9200"
+	url = "http://localhost:9200"
 )
 
 func main() {
@@ -26,9 +26,6 @@ func main() {
 	db := getDB()
 	defer db.Close()
 	issues := getIssues(db)
-	for idx, data := range *issues {
-		log.Printf("issus[%d]: %v", idx, data)
-	}
 
 	// Elasticsearch put
 	putEsData(issues)
@@ -53,6 +50,7 @@ func getDB() *gorm.DB {
 
 func getIssues(db *gorm.DB) *[]Issue {
 
+	// [予定工数]のフィールドを無理やりですがスコアにしています
 	query := `
 select 
 	i.id          as issue_id,
@@ -70,7 +68,8 @@ select
 	u.login       as author_nm,
 	i.created_on  as created_on,
 	i.updated_on  as updated_on,
-	i.closed_on   as closed_on 
+	i.closed_on   as closed_on, 
+    i.estimated_hours as score 
 from
 	issues i
 	left outer join trackers t on t.id=i.tracker_id
@@ -97,7 +96,6 @@ func putEsData(issues *[]Issue) {
 	defer client.Stop()
 
 	bulkRequest := client.Bulk()
-
 	for _, issue := range *issues {
 		index1Req := elastic.NewBulkIndexRequest().
 			Index("201801").
