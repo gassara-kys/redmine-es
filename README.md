@@ -90,12 +90,12 @@ $ docker run --rm --name redmine-sync \
 $ crontab -l > ~/crontab  #別ファイル編集
 $ vi ~/crontab
 # 以下を追加
-DB_HOST=localhost
+DB_HOST=localhost  # dockerホスト
 DB_PORT=3306 
 DB_NAME=redmine
 DB_USER=redmine
 DB_PASS=password
-ES_URL="http://localhost:9200"
+ES_URL="http://localhost:9200"  # dockerホスト
 
 */1 * * * * /usr/bin/docker run --rm --name redmine-sync -e DB_HOST=${DB_HOST} -e DB_PORT=${DB_PORT} -e DB_NAME=${DB_NAME} -e DB_USER=${DB_USER} -e DB_PASS=${DB_PASS} -e ES_URL=${ES_URL} redmine-sync:latest 2>&1 | logger -t redmine-sync
 

@@ -11,14 +11,14 @@ import (
 )
 
 const (
-	dbHost     = "localhost"
-	dbPort     = "3306"
-	dbName     = "redmine"
-	dbUser     = "root"
-	dbPass     = "password"
+	dbHost     = os.GetENV("DB_HOST") // dev-redmine-es01.in.ssg.isca.jp
+	dbPort     = os.GetENV("DB_PORT") // "3306"
+	dbName     = os.GetENV("DB_NAME") // "redmine"
+	dbUser     = os.GetENV("DB_USER") // "root"
+	dbPass     = os.GetENV("DB_PASS") // "password"
 	dbProtocol = "tcp"
 
-	url = "http://localhost:9200"
+	url = os.GetENV("ES_URL") // "http://dev-redmine-es01.in.ssg.isca.jp:9200"
 )
 
 func main() {
