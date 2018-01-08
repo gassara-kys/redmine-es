@@ -43,18 +43,11 @@ $ apt-get -y install docker-ce
 $ git clone https://github.com/gassara-kys/redmine-es.git
 $ cd redmine-es
 $ docker-compose build --no-cache
+$ sysctl -w vm.max_map_count=262144 #Elasticsearch起動時のメモリ消費調整(vm.max_map_count)
 $ source util/env.sample.sh
 $ docker-compose up -d
 ```
 
-- 起動時にエラーが発生した場合
-  - Elasticsearch起動時のメモリ消費調整
-  - vm.max_map_count
-```bash
-# docker hostにsshして...
-$ sudo -s
-$ sysctl -w vm.max_map_count=262144
-```
 
 ### 動作確認
 
@@ -75,12 +68,12 @@ localhostの部分はdockerホストのIPに読み替え
 $ cd sync/
 $ docker build -t redmine-sync:latest .
 $ docker run --rm --name redmine-sync \
-    -e DB_HOST=localhost \
+    -e DB_HOST={dockerホストのIP  or DNS} \ 
     -e DB_PORT=3306 \
     -e DB_NAME=redmine \
     -e DB_USER=redmine \
     -e DB_PASS=password \
-    -e ES_URL="http://localhost:9200" \
+    -e ES_URL="http://{dockerホストのIP or DNS}:9200" \
     redmine-sync:latest
 ```
 
@@ -90,7 +83,7 @@ $ docker run --rm --name redmine-sync \
 $ crontab -l > ~/crontab  #別ファイル編集
 $ vi ~/crontab
 # 以下を追加
-DB_HOST=localhost  # dockerホスト
+DB_HOST={dockerホストのIP or DNS} 
 DB_PORT=3306 
 DB_NAME=redmine
 DB_USER=redmine
